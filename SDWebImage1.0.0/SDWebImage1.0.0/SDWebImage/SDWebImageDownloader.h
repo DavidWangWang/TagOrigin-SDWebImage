@@ -9,12 +9,19 @@
 #import <Foundation/Foundation.h>
 #import "SDWebImageDownloaderDelegate.h"
 
-@interface SDWebImageDownloader : NSOperation
+@interface SDWebImageDownloader : NSObject
 
 @property (strong,nonatomic) NSURL *url;
-@property(nonatomic,weak) id<SDWebImageDownloaderDelegate> delegate;
+@property (nonatomic,weak) id<SDWebImageDownloaderDelegate> delegate;
+@property (strong,nonatomic) NSURLConnection *connection;
+@property (strong,nonatomic) NSMutableData *imageData;
+
 
 + (instancetype)downLoadWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate;
-+ (void)setMaxConcurrentDownLoads:(NSUInteger)max;
+
+- (void)start;
+- (void)cancel;
+
++ (void)setMaxConcurrentDownLoads:(NSUInteger)max __attribute__((deprecated));
 
 @end

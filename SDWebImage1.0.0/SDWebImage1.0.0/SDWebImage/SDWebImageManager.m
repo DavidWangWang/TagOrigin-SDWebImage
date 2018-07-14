@@ -76,7 +76,7 @@ static SDWebImageManager *instance;
         return;
     }
     //1.根据delegate找到idx 2.根据id找到downLoader 3.在delegate数组移除，downloader数组移除 3.执行cancale 4.字典移除
-    NSInteger idx = [self.delegates indexOfObject:delegate];
+    NSInteger idx = [self.delegates indexOfObjectIdenticalTo:delegate];
     if (idx == NSNotFound || idx < 0 || idx >= self.downloaders.count)
     {
         return;
@@ -93,24 +93,23 @@ static SDWebImageManager *instance;
 
 - (void)imageDownLoader:(SDWebImageDownloader *)downLoader didFinishWithImage:(UIImage *)image
 {
-    @synchronized(self)
+   
+    for (NSInteger i=_downloaders.count - 1; i >= 0; i--)
     {
-        for (int i=0; i<_downloaders.count; i++)
+        SDWebImageDownloader *innerDownLoader = _downloaders[i];
+        if (innerDownLoader == downLoader)
         {
-            SDWebImageDownloader *innerDownLoader = _downloaders[i];
-            if (innerDownLoader == downLoader)
+            id <SDWebImageManagerDelegate> delegate = self.delegates[i];
+            if (delegate && [delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
             {
-                id <SDWebImageManagerDelegate> delegate = self.delegates[i];
-                if (delegate && [delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
-                {
-                    [delegate webImageManager:self didFinishWithImage:image];
-                }
-                [self.delegates removeObject:delegate];
-                [self.downloaders removeObject:innerDownLoader];
-                
+                [delegate webImageManager:self didFinishWithImage:image];
             }
+            [self.delegates removeObject:delegate];
+            [self.downloaders removeObject:innerDownLoader];
+            
         }
     }
+
     if (image)
     {
         [[SDImageCache sharedImageCache] storeImage:image forKey:downLoader.url.absoluteString];

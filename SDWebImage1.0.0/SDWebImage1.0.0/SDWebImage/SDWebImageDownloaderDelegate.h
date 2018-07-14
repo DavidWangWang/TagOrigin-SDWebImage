@@ -14,6 +14,7 @@
 @optional
 
 - (void)imageDownLoader:(SDWebImageDownloader *)downLoader didFinishWithImage:(UIImage *)image;
+- (void)imageDownloader:(SDWebImageDownloader *)downloader didFailWithError:(NSError *)error;
 
 @end
 
