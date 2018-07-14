@@ -21,10 +21,10 @@
     // 1.取消当前URL的下载  2.在manager的缓存中去取. 有直接返回 3.没有则设置placeHodler走下载
     SDWebImageManager *manager = [SDWebImageManager sharedManager];
     [manager cancelForDelegate:self];
-    UIImage *image = [manager imageWithURL:url];
-    if (image)
+    UIImage *cachedImage = [manager imageWithURL:url];;
+    if (cachedImage)
     {
-        self.image = image;
+        self.image = cachedImage;
     }
     else
     {
@@ -41,6 +41,9 @@
     self.image = image;
 }
 
-
+- (void)cancelCurrentImageLoad
+{
+    [[SDWebImageManager sharedManager] cancelForDelegate:self];
+}
 
 @end
