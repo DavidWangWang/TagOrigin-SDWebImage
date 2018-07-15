@@ -21,19 +21,8 @@
     // 1.取消当前URL的下载  2.在manager的缓存中去取. 有直接返回 3.没有则设置placeHodler走下载
     SDWebImageManager *manager = [SDWebImageManager sharedManager];
     [manager cancelForDelegate:self];
-    UIImage *cachedImage = [manager imageWithURL:url];;
-    if (cachedImage)
-    {
-        self.image = cachedImage;
-    }
-    else
-    {
-        if (placeholder)
-        {
-            self.image = placeholder;
-        }
-        [manager downLoadImageWithURL:url delegate:self];
-    }
+    self.image = placeholder;
+    [manager downLoadImageWithURL:url delegate:self];
 }
 
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithImage:(UIImage *)image

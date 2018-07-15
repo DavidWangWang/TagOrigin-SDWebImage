@@ -9,7 +9,7 @@
 #import "SDWebImageManager.h"
 #import "SDWebImageDownloader.h"
 #import "SDImageCache.h"
-@interface SDWebImageManager()
+@interface SDWebImageManager()<SDImageCacheDelegate>
 
 @property (strong,nonatomic) NSMutableArray *delegates;
 @property (strong,nonatomic)  NSMutableArray *downloaders;
@@ -55,18 +55,14 @@ static SDWebImageManager *instance;
 - (void)downLoadImageWithURL:(NSURL *)url delegate:(id<SDWebImageManagerDelegate>)delegate
 {
     // 1.对传入的数据进行防御 2.根据URL去获取download 3.如果不存在则创建并写入字典 4.delegate数组添加。downLoad数组添加
-    if (!url || [self.failedURLs containsObject:url])
+    if (!url || !delegate || [self.failedURLs containsObject:url])
     {
         return;
     }
-    SDWebImageDownloader *downLoader = [self.downloaderForURL valueForKey:url.absoluteString];
-    if (!downLoader)
-    {
-        downLoader = [SDWebImageDownloader downLoadWithURL:url delegate:self];
-        self.downloaderForURL[url] = downLoader;
-    }
-    [self.delegates addObject:delegate];
-    [self.downloaders addObject:downLoader];
+    NSMutableDictionary *arguments = @{}.mutableCopy;
+    arguments[@"delegate"] = delegate;
+    arguments[@"key"] = url.absoluteString;
+    [[SDImageCache sharedImageCache] quaryDiskForKey:url.absoluteString delegate:self userInfo:arguments];
 }
 
 - (void)cancelForDelegate:(id<SDWebImageManagerDelegate>)delegate
@@ -90,6 +86,32 @@ static SDWebImageManager *instance;
         [self.downloaderForURL removeObjectForKey:downLoader.url];
     }
 }
+
+#pragma mark SDImageCacheDelegate
+
+- (void)imageCache:(SDImageCache *)imageCache didFindImage:(UIImage *)image forKey:(NSString *)key userInfo:(NSDictionary *)info
+{
+    id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
+
+    if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+    {
+        [delegate webImageManager:self didFinishWithImage:info[@"image"]];
+    }
+}
+
+- (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
+{
+    SDWebImageDownloader *downLoader = [self.downloaderForURL valueForKey:key];
+    id <SDWebImageManagerDelegate> delegate = info[@"delegate"];
+    if (!downLoader)
+    {
+        downLoader = [SDWebImageDownloader downLoadWithURL:[NSURL URLWithString:key] delegate:self];
+        self.downloaderForURL[[NSURL URLWithString:key]] = downLoader;
+    }
+    [self.delegates addObject:delegate];
+    [self.downloaders addObject:downLoader];
+}
+
 
 - (void)imageDownLoader:(SDWebImageDownloader *)downLoader didFinishWithImage:(UIImage *)image
 {

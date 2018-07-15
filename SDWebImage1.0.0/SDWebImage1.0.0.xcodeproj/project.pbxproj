@@ -65,6 +65,7 @@
 		63FF083120F4F84E00797540 /* SDWebImage1.0.0UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SDWebImage1.0.0UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63FF083520F4F84E00797540 /* SDWebImage1_0_0UITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDWebImage1_0_0UITests.m; sourceTree = "<group>"; };
 		63FF083720F4F84E00797540 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		63FF084420FB3F5E00797540 /* SDImageCacheDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDImageCacheDelegate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +96,7 @@
 		6384F8B420F64A9A0000E781 /* SDWebImage */ = {
 			isa = PBXGroup;
 			children = (
+				63FF084420FB3F5E00797540 /* SDImageCacheDelegate.h */,
 				6384F8BC20F64F750000E781 /* SDWebImageManagerDelegate.h */,
 				6384F8B520F64ADA0000E781 /* SDWebImageDownloaderDelegate.h */,
 				6384F8B620F64AF90000E781 /* SDWebImageDownloader.h */,

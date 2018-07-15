@@ -15,6 +15,7 @@
 @property (strong,nonatomic) NSMutableDictionary *imageDataCache;
 @property (nonatomic, copy) NSString *diskCachePath;
 @property (strong,nonatomic) NSOperationQueue *cacheInQueue;
+@property (strong,nonatomic) NSOperationQueue *cacheOutQueue; /// < 输出流 Queue
 
 @end
 
@@ -48,7 +49,9 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
         }
         // Init the operation queue
         self.cacheInQueue = [[NSOperationQueue alloc] init];
-        self.cacheInQueue.maxConcurrentOperationCount = 2;
+        self.cacheInQueue.maxConcurrentOperationCount = 1;
+        self.cacheOutQueue = [[NSOperationQueue alloc]init];
+        self.cacheOutQueue.maxConcurrentOperationCount = 1;
 
         // Subscribe to app events
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -127,6 +130,43 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
     }
 }
 
+- (void)queryDiskCacheOperation:(NSDictionary *)arguments
+{
+    NSString *key = arguments[@"key"];
+    NSMutableDictionary *mutableArguments = [arguments mutableCopy] ;
+    UIImage *image = [[UIImage alloc] initWithContentsOfFile:[self cachePathForKey:key]];
+    if (image)
+    {
+        [mutableArguments setObject:image forKey:@"image"];
+    }
+    [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:YES];
+}
+
+- (void)notifyDelegate:(NSDictionary *)arguments
+{
+    if (!arguments || ![arguments isKindOfClass:[NSDictionary class]]) return;
+    
+    UIImage *image = arguments[@"image"];
+    id delegate = arguments[@"delegate"];
+    NSDictionary *userInfo = arguments[@"userInfo"];
+    NSString *key = arguments[@"key"];
+    if (image)
+    {
+        if ([delegate respondsToSelector:@selector(imageCache:didFindImage:forKey:userInfo:)])
+        {
+            [delegate imageCache:self didFindImage:image forKey:key userInfo:userInfo];
+        }
+    }
+    else
+    {
+        if ([delegate respondsToSelector:@selector(imageCache:didNotFindImageForKey:userInfo:)])
+        {
+            [delegate imageCache:self didNotFindImageForKey:key userInfo:userInfo];
+        }
+ 
+    }
+}
+
 
 - (void)storeImage:(UIImage *)image forKey:(NSString *)key
 {
@@ -157,7 +197,7 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
 }
 
 
-
+// 目前是直接在主线程查询的，如果查询量很大的话会堵塞主线程(通过与虚存交互进行IO操作消耗CPU)
 - (UIImage *)imageFromKey:(NSString *)key
 {
     return [self imageFromKey:key toDisk:YES];
@@ -179,6 +219,39 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
         }
     }
     return image;
+}
+
+- (void)quaryDiskForKey:(NSString *)key delegate:(id<SDImageCacheDelegate>)delegate userInfo:(NSDictionary *)userInfo
+{
+    if (!key || !delegate)
+    {
+       if ([delegate respondsToSelector:@selector(imageCache:didNotFindImageForKey:userInfo:)])
+       {
+           [delegate imageCache:self didNotFindImageForKey:key userInfo:userInfo];
+       }
+        return;
+    }
+    // 1.先从内存查，查不到的话则异步查,然后如果沙盒存在则走IO,输入流到内存，然后解析出来
+    UIImage *image = [self.memoryCache objectForKey:key];
+    if (image)
+    {
+       if ([delegate respondsToSelector:@selector(imageCache:didFindImage:forKey:userInfo:)])
+       {
+           [delegate imageCache:self didFindImage:image forKey:key userInfo:userInfo];
+       }
+    }
+    else
+    {
+        @synchronized (self.cacheOutQueue)
+        {
+            NSMutableDictionary *dict = @{}.mutableCopy;
+            dict[@"key"] = key;
+            dict[@"delegate"] = delegate;
+            dict[@"userInfo"] = userInfo;
+            [self.cacheOutQueue addOperation:[[NSInvocationOperation alloc]initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:dict]];
+        }
+        
+    }
 }
 
 - (void)removeImageForKey:(NSString *)key
