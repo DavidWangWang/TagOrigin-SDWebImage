@@ -70,13 +70,21 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)aConnection
 {
-    UIImage *image = [UIImage imageWithData:self.imageData];
+    // finish 置空,防止重复下载。
+    self.connection = nil;
+    
+    if ([self.delegate respondsToSelector:@selector(imageDownloaderDidFinish:)])
+    {
+        [self.delegate imageDownloaderDidFinish:self];
+    }
+    
+    
     if ([self.delegate respondsToSelector:@selector(imageDownLoader:didFinishWithImage:)])
     {
+        UIImage *image = [UIImage imageWithData:self.imageData];
         [self.delegate imageDownLoader:self didFinishWithImage:image];
     }
     self.imageData = nil;
-    self.connection = nil;
 }
 
 

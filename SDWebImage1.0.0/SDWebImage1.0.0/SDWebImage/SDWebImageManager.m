@@ -112,7 +112,8 @@ static SDWebImageManager *instance;
 
     if (image)
     {
-        [[SDImageCache sharedImageCache] storeImage:image forKey:downLoader.url.absoluteString];
+        // 传递过去的是data,data直接从downLoader拿过来的,相比之前优化的地方是节省image转data的开销了。
+        [[SDImageCache sharedImageCache] storeImage:image data:downLoader.imageData forKey:downLoader.url.absoluteString toDisk:YES];
     }
     else
     {

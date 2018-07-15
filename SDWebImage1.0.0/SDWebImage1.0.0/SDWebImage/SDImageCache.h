@@ -12,6 +12,7 @@
 
 + (SDImageCache *)sharedImageCache;
 - (void)storeImage:(UIImage *)image forKey:(NSString *)key;
+- (void)storeImage:(UIImage *)image data:(NSData *)data forKey:(NSString *)key toDisk:(BOOL)toDisk;
 - (void)storeImage:(UIImage *)image forKey:(NSString *)key toDisk:(BOOL)toDisk;
 - (UIImage *)imageFromKey:(NSString *)key;
 - (UIImage *)imageFromKey:(NSString *)key toDisk:(BOOL)toDisk;
