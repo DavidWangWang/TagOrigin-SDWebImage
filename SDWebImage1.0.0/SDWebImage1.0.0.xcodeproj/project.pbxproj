@@ -19,6 +19,7 @@
 		63FF082020F4F84E00797540 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63FF081E20F4F84E00797540 /* LaunchScreen.storyboard */; };
 		63FF082B20F4F84E00797540 /* SDWebImage1_0_0Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF082A20F4F84E00797540 /* SDWebImage1_0_0Tests.m */; };
 		63FF083620F4F84E00797540 /* SDWebImage1_0_0UITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF083520F4F84E00797540 /* SDWebImage1_0_0UITests.m */; };
+		63FF08482103214C00797540 /* UIButton+WebCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF08472103214C00797540 /* UIButton+WebCache.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,9 @@
 		63FF083520F4F84E00797540 /* SDWebImage1_0_0UITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDWebImage1_0_0UITests.m; sourceTree = "<group>"; };
 		63FF083720F4F84E00797540 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		63FF084420FB3F5E00797540 /* SDImageCacheDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDImageCacheDelegate.h; sourceTree = "<group>"; };
+		63FF08452103203E00797540 /* SDWebImageCompat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDWebImageCompat.h; sourceTree = "<group>"; };
+		63FF08462103214C00797540 /* UIButton+WebCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIButton+WebCache.h"; sourceTree = "<group>"; };
+		63FF08472103214C00797540 /* UIButton+WebCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIButton+WebCache.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +111,9 @@
 				6384F8BE20F653A00000E781 /* UIImageView+WebCache.m */,
 				6384F8C020F79AFA0000E781 /* SDImageCache.h */,
 				6384F8C120F79AFA0000E781 /* SDImageCache.m */,
+				63FF08452103203E00797540 /* SDWebImageCompat.h */,
+				63FF08462103214C00797540 /* UIButton+WebCache.h */,
+				63FF08472103214C00797540 /* UIButton+WebCache.m */,
 			);
 			path = SDWebImage;
 			sourceTree = "<group>";
@@ -315,6 +322,7 @@
 				63FF081820F4F84E00797540 /* ViewController.m in Sources */,
 				6384F8BF20F653A00000E781 /* UIImageView+WebCache.m in Sources */,
 				6384F8BB20F64F070000E781 /* SDWebImageManager.m in Sources */,
+				63FF08482103214C00797540 /* UIButton+WebCache.m in Sources */,
 				63FF081520F4F84E00797540 /* AppDelegate.m in Sources */,
 				63FF081220F4F84E00797540 /* main.m in Sources */,
 			);

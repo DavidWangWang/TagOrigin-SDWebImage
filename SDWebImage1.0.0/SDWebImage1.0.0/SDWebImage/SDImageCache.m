@@ -12,7 +12,6 @@
 @interface SDImageCache()
 
 @property (strong,nonatomic) NSMutableDictionary *memoryCache;
-@property (strong,nonatomic) NSMutableDictionary *imageDataCache;
 @property (nonatomic, copy) NSString *diskCachePath;
 @property (strong,nonatomic) NSOperationQueue *cacheInQueue;
 @property (strong,nonatomic) NSOperationQueue *cacheOutQueue; /// < 输出流 Queue
@@ -40,7 +39,6 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
     self = [super init];
     if (self) {
         self.memoryCache = [NSMutableDictionary dictionary];
-        self.imageDataCache = [NSMutableDictionary dictionary];
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
         self.diskCachePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"ImageCache"];
         if (![[NSFileManager defaultManager] fileExistsAtPath:self.diskCachePath])
@@ -52,7 +50,7 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
         self.cacheInQueue.maxConcurrentOperationCount = 1;
         self.cacheOutQueue = [[NSOperationQueue alloc]init];
         self.cacheOutQueue.maxConcurrentOperationCount = 1;
-
+#if TARGET_OS_IPHONE
         // Subscribe to app events
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(didReceiveMemoryWarning:)
@@ -62,7 +60,8 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(willTerminate)
                                                      name:UIApplicationWillTerminateNotification
-                                                   object:nil];
+                                                 object:nil];
+#ifdef __IPHONE_4_0  
         UIDevice *device = [UIDevice currentDevice];
          if ([device respondsToSelector:@selector(isMultitaskingSupported)] && device.multitaskingSupported)
          {
@@ -72,6 +71,8 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
                                                           name:UIApplicationDidEnterBackgroundNotification
                                                         object:nil];
          }
+#endif
+#endif
     }
     return self;
 }
@@ -102,30 +103,32 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
     return [self.diskCachePath stringByAppendingPathComponent:filename];
 }
 
-
-
-- (void)storeKeyToDisk:(NSString *)key
+// 改成Array目的是不用NSDictionary 减少加锁造成的内存消耗
+- (void)storeKeyToDisk:(NSArray *)keyDatas
 {
+   //1.取出key,如果key不存在或者长度为0则直接返回
+   //2.取出data. 根据data是否存在分2个写沙盒的方式
+    NSString *key = keyDatas.firstObject;
     if (!key || key.length == 0) return;
-    
-    NSData *data = [self.imageDataCache objectForKey:key];
-    NSString *path  = [self cachePathForKey:key];
-    // can not user default manager in another thread
-    NSFileManager *manager = [[NSFileManager alloc]init];
+    NSData *data = keyDatas.count >1 ? keyDatas[1] : nil;
+    NSFileManager *fileManager = [[NSFileManager alloc]init];
     if (data)
     {
-         [manager createFileAtPath:path contents:data attributes:nil];
-         @synchronized (self.imageDataCache)
-         {
-             [self.imageDataCache removeObjectForKey:key];
-         }
+        [fileManager createFileAtPath:[self cachePathForKey:key] contents:data attributes:nil];
     }
     else
     {
         UIImage *image = [self imageFromKey:key toDisk:YES];
-        if (image != nil)
+        if (image)
         {
-            [manager createFileAtPath:path contents:UIImageJPEGRepresentation(image, (CGFloat)1.0) attributes:nil];
+#if TARGET_OS_IPHONE
+            [fileManager createFileAtPath:[self cachePathForKey:key] contents:UIImageJPEGRepresentation(image, (CGFloat)1.0) attributes:nil];
+#else
+            NSArray*  representations  = [image representations];
+            NSData* jpegData = [NSBitmapImageRep representationOfImageRepsInArray: representations usingType: NSJPEGFileType properties:nil];
+            [fileManager createFileAtPath:[self cachePathForKey:key] contents:jpegData attributes:nil];
+#endif
+            
         }
     }
 }
@@ -184,15 +187,16 @@ static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
     {
         return;
     }
-    if (!data && toDisk)
-    {
-        return;
-    }
     [self.memoryCache setObject:image forKey:key];
     if (toDisk)
     {
-        [self.imageDataCache setObject:data forKey:key];
-        [self.cacheInQueue addOperation:[[NSInvocationOperation alloc]initWithTarget:self selector:@selector(storeKeyToDisk:) object:key]];
+        NSArray *keyDatas = nil;
+        if (data){
+            keyDatas = @[key,data];
+        }else{
+            keyDatas = @[key];
+        }
+        [self.cacheInQueue addOperation:[[NSInvocationOperation alloc]initWithTarget:self selector:@selector(storeKeyToDisk:) object:keyDatas]];
     }
 }
 

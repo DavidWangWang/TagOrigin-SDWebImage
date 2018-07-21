@@ -6,8 +6,11 @@
 //  Copyright © 2018年 @David. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "SDWebImageCompat.h"
 #import "SDWebImageDownloaderDelegate.h"
+
+extern NSString *const SDWebImageDownloadStartNotification;
+extern NSString *const SDWebImageDownloadStopNotification;
 
 @interface SDWebImageDownloader : NSObject
 
@@ -15,8 +18,11 @@
 @property (nonatomic,weak) id<SDWebImageDownloaderDelegate> delegate;
 @property (strong,nonatomic) NSURLConnection *connection;
 @property (strong,nonatomic) NSMutableData *imageData;
+@property (strong,nonatomic) id userInfo;
+@property(assign,nonatomic) BOOL lowPriority;
 
-
++ (id)downloaderWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate userInfo:(id)userInfo lowPriority:(BOOL)lowPriority;
++ (id)downloaderWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate userInfo:(id)userInfo;
 + (instancetype)downLoadWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate;
 
 - (void)start;

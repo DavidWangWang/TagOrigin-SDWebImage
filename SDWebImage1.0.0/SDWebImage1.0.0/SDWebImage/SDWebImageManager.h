@@ -6,7 +6,7 @@
 //  Copyright © 2018年 @David. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "SDWebImageCompat.h"
 #import "SDWebImageDownloaderDelegate.h"
 #import "SDWebImageManagerDelegate.h"
 
@@ -15,5 +15,6 @@
 + (id)sharedManager;
 - (UIImage *)imageWithURL:(NSURL *)url;
 - (void)downLoadImageWithURL:(NSURL *)url delegate:(id<SDWebImageManagerDelegate>)delegate;
+- (void)downloadWithURL:(NSURL *)url delegate:(id<SDWebImageManagerDelegate>)delegate retryFailed:(BOOL)retryFailed;
 - (void)cancelForDelegate:(id<SDWebImageManagerDelegate>)delegate;
 @end

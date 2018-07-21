@@ -55,7 +55,12 @@ static SDWebImageManager *instance;
 - (void)downLoadImageWithURL:(NSURL *)url delegate:(id<SDWebImageManagerDelegate>)delegate
 {
     // 1.对传入的数据进行防御 2.根据URL去获取download 3.如果不存在则创建并写入字典 4.delegate数组添加。downLoad数组添加
-    if (!url || !delegate || [self.failedURLs containsObject:url])
+    [self downloadWithURL:url delegate:delegate retryFailed:NO];
+}
+
+- (void)downloadWithURL:(NSURL *)url delegate:(id<SDWebImageManagerDelegate>)delegate retryFailed:(BOOL)retryFailed
+{
+    if (!url || !delegate || (!retryFailed  && [self.failedURLs containsObject:url]))
     {
         return;
     }
@@ -64,6 +69,7 @@ static SDWebImageManager *instance;
     arguments[@"key"] = url.absoluteString;
     [[SDImageCache sharedImageCache] quaryDiskForKey:url.absoluteString delegate:self userInfo:arguments];
 }
+
 
 - (void)cancelForDelegate:(id<SDWebImageManagerDelegate>)delegate
 {
@@ -126,6 +132,13 @@ static SDWebImageManager *instance;
             {
                 [delegate webImageManager:self didFinishWithImage:image];
             }
+            else
+            {
+                if ([delegate respondsToSelector:@selector(webImageManager:didFailWithError:)])
+                {
+                    [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
+                }
+            }
             [self.delegates removeObject:delegate];
             [self.downloaders removeObject:innerDownLoader];
             
@@ -144,7 +157,29 @@ static SDWebImageManager *instance;
     [self.downloaderForURL removeObjectForKey:downLoader.url];
 }
 
-
+// 下载失败在delegate移除。downLoader中移除。 Dictionary中移除;failedURLs中添加
+- (void)imageDownloader:(SDWebImageDownloader *)downloader didFailWithError:(NSError *)error
+{
+    
+    for (NSInteger i=_downloaders.count - 1; i >= 0; i--)
+    {
+        SDWebImageDownloader *innerDownLoader = _downloaders[i];
+        if (innerDownLoader == downloader)
+        {
+            id <SDWebImageManagerDelegate> delegate = self.delegates[i];
+            
+            if ([delegate respondsToSelector:@selector(webImageManager:didFailWithError:)])
+            {
+                [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
+            }
+            [self.delegates removeObject:delegate];
+            [self.downloaders removeObject:innerDownLoader];
+            
+        }
+    }
+    [self.downloaderForURL removeObjectForKey:downloader.url];
+    [self.failedURLs addObject:downloader.url];
+}
 
 
 

@@ -6,7 +6,7 @@
 //  Copyright © 2018年 @David. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "SDWebImageCompat.h"
 
 @class SDImageCache;
 
