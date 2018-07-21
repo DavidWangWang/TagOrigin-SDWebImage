@@ -52,6 +52,11 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     NSURLRequest *request = [[NSURLRequest alloc]initWithURL:self.url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:15];
     self.connection = [[NSURLConnection alloc]initWithRequest:request delegate:self startImmediately:YES];
     [self.connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    if (!self.lowPriority)
+    {
+        [self.connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    }
+    
     [self.connection start];
     // 创建connection成功和失败的情况
     if (self.connection)
